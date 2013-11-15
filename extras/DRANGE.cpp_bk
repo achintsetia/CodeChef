@@ -1,0 +1,172 @@
+#include <iostream>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+struct intPoint
+{
+  int val;
+  int diff;
+  intPoint* next;
+  intPoint* prev;
+  intPoint* pair;
+};
+
+intPoint* root = NULL;
+intPoint array[80000];
+int size;
+int maxVal, minVal;
+
+void printList()
+{
+  intPoint* tmp = root;
+  cout << "NULL-";
+  while( tmp != NULL)
+  {
+    cout << "-|" << tmp->val << "|" << tmp->diff << "|-";
+    tmp = tmp->next;
+  }
+
+  cout << "-NULL" << endl;
+}
+
+void insert( int x, int y, int z, int N)
+{
+  if( size == 0)
+  {
+    array[0].val = 1;
+    array[0].diff = 0;
+    array[0].next = (array + 1);
+    array[0].prev = NULL;
+    array[0].pair = (array + 1);
+
+    array[1].val = N;
+    array[1].diff = 0;
+    array[1].next = NULL;
+    array[1].prev = (array + 0);
+    array[1].pair = (array + 0);
+
+    root = (array + 0);
+    size = 2;
+
+    minVal = 1;
+    maxVal = N;
+  }
+  else
+  {
+    intPoint* tmp = root;
+    while( tmp->next != NULL && tmp->next->val < x)
+      tmp = tmp->next;
+
+    intPoint* leftP = tmp;
+
+    while( tmp->next != NULL && tmp->next->val < y)
+    {
+      tmp = tmp->next;
+      tmp->diff += z;
+    }
+
+    intPoint* rightP = tmp;
+
+    intPoint* newLP = (array + size);
+    size++;
+
+    newLP->val = x;
+    newLP->prev = leftP;
+    newLP->next = leftP->next;
+    leftP->next = newLP;
+    if( leftP->pair->val >= x)
+      newLP->diff = z + leftP->diff;
+    else
+      newLP->diff = z;
+
+    intPoint* newRP;
+    if( rightP == leftP)
+    {
+      newRP = (array + size);
+      size++;
+
+      newRP->val = y;
+      newRP->diff = newLP->diff;
+      newRP->prev = newLP;
+      newRP->next = newLP->next;
+      newLP->next = newRP;
+    }
+    else
+    {
+      newRP = (array + size);
+      size++;
+
+      newRP->val = y;
+      newRP->prev = rightP;
+      newRP->next = rightP->next;
+      rightP->next = newRP;
+      if( rightP->pair->val >= y)
+        newRP->diff = z + rightP->diff;
+      else
+        newRP->diff = z;
+    }
+    newLP->pair = newRP;
+    newRP->pair = newLP;
+
+    if( newLP->val + newLP->diff > maxVal)
+      maxVal = newLP->val + newLP->diff;
+
+    if( newRP->val + newRP->diff > maxVal)
+      maxVal = newRP->val + newRP->diff;
+
+    if( newLP->val + newLP->diff < minVal)
+      minVal = newLP->val + newLP->diff;
+
+    if( newRP->val + newRP->diff < minVal)
+      minVal = newRP->val + newRP->diff;
+  }
+  //printList();
+}
+
+int main( int argc, char** argv)
+{
+  int T, N, M, w, x, y, z;
+
+  scanf("%d", &T);
+
+  while(T--)
+  {
+    scanf("%d %d", &N, &M);
+
+    if( N == 1)
+    {
+      scanf("%d %d %d %d", &w, &x, &y, &z);
+      cout << 0 << endl;
+      continue;
+    }
+    size = 0;
+    insert( 1, N, 1, N);
+    maxVal  = 0;
+    minVal  = 1000;
+
+    while(M--)
+    {
+      scanf("%d %d %d %d", &w, &x, &y, &z);
+      if( x > 1 && y<N)
+        insert( x-1, y+1, 0, N);
+      else if( x == 1 && y<N)
+        insert( x, y+1, 0, N);
+      else if( y == N && x>1)
+        insert( x-1, y, 0, N);
+
+      if( w == 1)
+        insert( x, y, z, N);
+      else
+        insert( x, y, -z, N);
+    }
+
+    cout << maxVal - minVal << endl;
+  }
+  return 0;
+}
